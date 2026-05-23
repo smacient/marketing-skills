@@ -6,28 +6,49 @@ Skills are modular, self-contained packages that give Claude structured workflow
 
 ## Skills
 
-| Skill | Description |
-|-------|-------------|
-| [creator-teardown](skills/creator-teardown/) | Full Instagram creator analysis pipeline - extracts posts, transcribes audio, analyzes captions and visuals, and produces four structured learnings documents |
-| [amazon-review-insights](skills/amazon-review-insights/) | Fetches Amazon reviews for any brand and surfaces hidden patterns - silent complaints in 5-star reviews, cross-ASIN signals, competitive mentions, untapped use cases, and a customer language bank |
-| [meta-ads-gap-analysis](skills/meta-ads-gap-analysis/) | End-to-end Meta Ads competitive analysis between two brands - fetches ads via Smacient, analyzes videos via Gemini, outputs 9-tab Excel report |
+| Skill | Description | Requires |
+|-------|-------------|----------|
+| [creator-teardown](skills/creator-teardown/) | Full Instagram creator analysis pipeline - extracts posts, transcribes audio, analyzes captions and visuals, and produces four structured learnings documents | Smacient MCP, Python, ffmpeg |
+| [amazon-review-insights](skills/amazon-review-insights/) | Fetches Amazon reviews for any brand and surfaces hidden patterns - silent complaints in 5-star reviews, cross-ASIN signals, competitive mentions, untapped use cases, and a customer language bank | Smacient MCP |
+| [meta-ads-gap-analysis](skills/meta-ads-gap-analysis/) | End-to-end Meta Ads competitive analysis between two brands - fetches ads via Smacient, analyzes videos via Gemini, outputs 9-tab Excel report | Smacient MCP, Python, Gemini API key |
+
+## Prerequisites
+
+All skills require the **[Smacient Claude connector](https://smacient.com/products/marketing-context-claude/)** connected in your Claude Code session. Some skills have additional requirements - see the individual skill README for details.
 
 ## How to Use
 
-Install a skill globally so it is available across all Claude Code sessions:
+**Install all skills at once** (global - available across all Claude Code sessions):
 
 ```bash
-# Copy the skill folder to your global Claude skills directory
-cp -r skills/creator-teardown ~/.claude/skills/creator-teardown
+# macOS / Linux
+cp -r skills/* ~/.claude/skills/
+
+# Windows
+xcopy /E /I skills %USERPROFILE%\.claude\skills
 ```
 
-Or install at project level (available only in that workspace):
+**Install a single skill** (global):
 
 ```bash
-cp -r skills/creator-teardown path/to/your/project/.claude/skills/creator-teardown
+# macOS / Linux
+cp -r skills/<skill-name> ~/.claude/skills/<skill-name>
+
+# Windows
+xcopy /E /I skills\<skill-name> %USERPROFILE%\.claude\skills\<skill-name>
 ```
 
-Once installed, Claude Code will automatically detect and trigger the skill based on your prompt.
+**Install at project level** (available only in that workspace):
+
+```bash
+# macOS / Linux
+cp -r skills/<skill-name> path/to/your/project/.claude/skills/<skill-name>
+
+# Windows
+xcopy /E /I skills\<skill-name> .claude\skills\<skill-name>
+```
+
+Once installed, Claude Code will automatically detect and trigger the skill based on your prompt. See each skill's README for trigger phrases and parameters.
 
 ## Structure
 
