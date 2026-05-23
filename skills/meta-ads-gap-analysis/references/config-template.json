@@ -1,0 +1,16 @@
+{
+  "brand_a": {
+    "folder": "competitorbrand",
+    "label": "Competitor Brand Name",
+    "page_url": "https://www.facebook.com/competitorbrand/",
+    "main_page_name": "Competitor Brand Name on Facebook",
+    "csv": "data/competitorbrand_smacient_YYYY-MM-DD.csv"
+  },
+  "brand_b": {
+    "folder": "yourbrand",
+    "label": "Your Brand Name",
+    "page_url": "https://www.facebook.com/yourbrand/",
+    "main_page_name": "Your Brand Name on Facebook",
+    "csv": "data/yourbrand_smacient_YYYY-MM-DD.csv"
+  }
+}

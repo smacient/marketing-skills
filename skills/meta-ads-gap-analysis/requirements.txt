@@ -1,0 +1,5 @@
+requests
+openpyxl
+pandas
+google-generativeai
+pillow
