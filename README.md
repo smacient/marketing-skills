@@ -8,6 +8,7 @@ Skills are modular, self-contained packages that give Claude structured workflow
 
 | Skill | Description | Requires |
 |-------|-------------|----------|
+| [amazon-research](skills/amazon-research/) | Full Amazon market research for any category - no Helium 10 or Jungle Scout required. Generates keywords, searches Amazon, filters irrelevant products via Gemini AI, extracts brand names and formats, outputs 8-tab Excel with market size, brand rankings, revenue estimates, pricing tiers, and competitive flags | Smacient MCP, Python, Gemini API key |
 | [creator-teardown](skills/creator-teardown/) | Full Instagram creator analysis pipeline - extracts posts, transcribes audio, analyzes captions and visuals, and produces four structured learnings documents | Smacient MCP, Python, ffmpeg |
 | [amazon-review-insights](skills/amazon-review-insights/) | Fetches Amazon reviews for any brand and surfaces hidden patterns - silent complaints in 5-star reviews, cross-ASIN signals, competitive mentions, untapped use cases, and a customer language bank | Smacient MCP |
 | [meta-ads-gap-analysis](skills/meta-ads-gap-analysis/) | End-to-end Meta Ads competitive analysis between two brands - fetches ads via Smacient, analyzes videos via Gemini, outputs 9-tab Excel report | Smacient MCP, Python, Gemini API key |
