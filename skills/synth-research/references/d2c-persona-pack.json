@@ -1,0 +1,26 @@
+{
+  "name": "D2C Consumer Goods",
+  "description": "General D2C buyer personas for consumer goods — personal care, wellness, food, household. Works across most product categories.",
+  "product_mode": {
+    "default_concerns": [
+      "the safety and quality of ingredients in this product",
+      "whether this product is genuinely effective and will deliver results",
+      "value for money — whether this is worth the price",
+      "whether my family will actually use and enjoy this product",
+      "whether this is a trustworthy brand I can rely on"
+    ],
+    "default_age_range": [28, 45],
+    "default_awareness": "cold",
+    "persona_count": 35
+  },
+  "ad_mode": {
+    "default_concerns": [
+      "getting real value for money",
+      "whether the product actually works as claimed",
+      "whether this is a brand I can trust",
+      "whether this solves a problem I actually have"
+    ],
+    "default_awareness": "cold",
+    "persona_count": 20
+  }
+}

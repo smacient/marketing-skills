@@ -1,0 +1,6 @@
+google-genai>=1.0.0
+polars>=0.20.0
+python-dotenv>=1.0.0
+
+# SSR engine (not on PyPI — install from source)
+git+https://github.com/pymc-labs/semantic-similarity-rating.git
