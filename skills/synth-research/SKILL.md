@@ -30,11 +30,25 @@ V1 supports product and ad modes. Confirm before proceeding.
 
 Ask: "Paste your content below — text, a description, or a URL."
 
-- If URL: use WebFetch to extract product description, key claims, price, and ingredient or feature list. Summarise what you extracted and confirm with the user.
 - If text or paste: use directly.
 - If ad mode with multiple variants: "How many variants? Paste them one at a time." Collect all variants before continuing.
+- If URL: follow the extraction sequence below.
 
-Confirm: "Got it. I'll be testing: [brief one-line summary of stimulus]."
+**URL extraction sequence (attempt in order, stop at first success):**
+
+1. **WebFetch the URL directly.** If you get a full product description, price, and feature list — use it.
+
+2. **If the page is truncated or returns only a title** (common on JavaScript-rendered Shopify and other modern storefronts): try appending `.json` to the product URL and WebFetch that instead.
+   - Example: `https://example.com/products/product-name` → `https://example.com/products/product-name.json`
+   - The JSON response contains the full product title, description, price, and variants in structured form.
+   - This works for most Shopify stores.
+
+3. **If neither works** (non-Shopify, behind auth, or heavily JS-rendered): tell the user: "I wasn't able to extract the page content automatically. Please paste the product description, key features, and price directly and I'll use that."
+
+After successful extraction, summarise what you have and confirm before proceeding:
+"Got it. I'll be testing: [brief one-line summary — product name, price, 2-3 key claims]."
+
+Apply the same extraction sequence for competitor URLs in Step 3.
 
 ---
 
