@@ -13,6 +13,7 @@ Skills are modular, self-contained packages that give Claude structured workflow
 | [amazon-review-insights](skills/amazon-review-insights/) | Fetches Amazon reviews for any brand and surfaces hidden patterns - silent complaints in 5-star reviews, cross-ASIN signals, competitive mentions, untapped use cases, and a customer language bank | Smacient MCP |
 | [meta-ads-gap-analysis](skills/meta-ads-gap-analysis/) | End-to-end Meta Ads competitive analysis between two brands - fetches ads via Smacient, analyzes videos via Gemini, outputs 9-tab Excel report | Smacient MCP, Python, Gemini API key |
 | [synth-research](skills/synth-research/) | Synthetic consumer research using SSR - runs AI persona panels against product pages or ad copy and returns PMF distributions across purchase intent, sentiment, trust, and value for money | Python, Gemini API key |
+| [listicle-aeo-audit](skills/listicle-aeo-audit/) | Audits listicle-style blog posts ("Best X", "Top N") against a 7-point Citable Listicle Architecture framework (buyer query, quick answer, methodology, comparison table, vendor sections, decision framework, proof+FAQ+schema) - outputs a per-URL Excel workbook plus a markdown report with priority-ordered fixes | Python |
 
 ## Prerequisites
 
