@@ -14,6 +14,7 @@ No API or MCP connector required - reads the CSVs Seller Central gives you.
 ```
 <brand folder>/
 ├── Search Query Performance/       one CSV per month (required)
+│   └── ASIN Level/<one folder per ASIN>/   optional, to analyse a single product
 └── Search Catalogue Performance/   one CSV per month (optional, adds revenue and per-ASIN findings)
 ```
 
@@ -37,6 +38,23 @@ Manual invocation:
 python scripts/profile_brand.py "<brand folder>" "<Brand Name>"   # discover config
 python scripts/run_analysis.py <config.json> -o <output dir>      # run analysis
 ```
+
+### Analysing a single ASIN
+
+Seller Central also exports SQP one ASIN at a time. Point `sqp_folder` at that
+ASIN's export folder in the config and leave `data_dir` on the brand folder; the
+level is detected from the export's own metadata row and the catalogue report is
+filtered to match.
+
+```bash
+python scripts/profile_brand.py "<brand folder>" "<Brand Name>"   "Search Query Performance/ASIN Level/ASIN ID_ B0XXXXXXXX"
+```
+
+Two things change in meaning. **Every share becomes one product's slice of the
+whole market**, so a weak number can mean a hard market or a sister ASIN winning
+it, and only the brand-level run separates those. And **the relevance boundary
+narrows**: a brand's boundary is what the brand can win, a product's is usually a
+subset, so profile the ASIN rather than inheriting the brand's config.
 
 ---
 
@@ -100,4 +118,4 @@ It refuses to size an opportunity when the brand has near-zero visibility, or wh
 - Only tested against amazon.in. Currency formatting, the event calendar and the price-barrier threshold are untested elsewhere.
 - The tokenizer is Latin-script only, so non-Latin queries fall into the unclassified bucket.
 - Weekly and quarterly exports are unhandled; the engine assumes monthly.
-- The ASIN-level SQP view has not been tested.
+- No large brand has been tested, so the saturation logic is barely exercised.

@@ -62,10 +62,14 @@ top 1,000 in the category. Consequences:
 - True category share is not measurable, only share among searches already won
 - A search leaving the report means **your** performance on it dropped
 
-### Every export is hard-capped at 1,000 rows
+### Every export is hard-capped: 1,000 rows brand-level, 100 ASIN-level
 
 Minimum search volume in the export is routinely 1, because the cut is on brand
 performance rather than volume. Any censoring rule keyed on volume is invalid.
+
+The ASIN-level view of the same report caps at 100 rows, verified as exactly 100
+in all 14 monthly exports for each of six ASINs across four brands. Never state
+the cap from memory; the engine reads it from the data.
 
 ### Monthly query churn of 50 to 80 percent is structural
 
@@ -80,6 +84,40 @@ rows but never exceeds the total click count. They describe the whole category's
 fulfilment mix. The brand-side equivalent is not in SQP at all; it has to come
 from Search Catalog Performance, which is ASIN-level, so the comparison only
 works in aggregate.
+
+### The ASIN-level SQP view is the same report with one column family renamed
+
+Seller Central exports SQP at brand level and at single-ASIN level. The two are
+structurally identical: same 33 columns, same metadata header row, same funnel.
+The only difference is that the brand side of every pair is renamed, so
+`Clicks: Brand Count` becomes `Clicks: ASIN Count`, and the same for Share % and
+Price (Median). Normalising those names is all it takes to run the whole
+analysis at either level.
+
+Three things change in meaning even though nothing changes in the arithmetic:
+
+- **Share means one product's slice of the whole market**, not the brand's. A
+  weak ASIN share can mean the market is hard to win, or that a sister ASIN is
+  winning it instead. SQP cannot separate those two; only the brand-level run
+  can.
+- **The row cap is 100, not 1,000**, so coverage of the product's own search
+  business is thinner and the visible query set is a smaller slice of the tail.
+- **Search Catalog Performance must be filtered to the same ASIN.** SCP is
+  always exported brand-wide. Left unfiltered on an ASIN run it puts a
+  brand-wide denominator under an ASIN-level numerator: revenue and AOV become
+  the brand's, and coverage understates severalfold. Observed on a real run:
+  20 percent before the filter, 76 percent after.
+
+The metadata header row is what identifies the level. ASIN-level exports carry
+`ASIN or Product=["B0XXXXXXXX"]`; brand-level ones have no such field.
+
+### The relevance boundary is narrower at ASIN level than at brand level
+
+The brand-level boundary is what the brand can win. The ASIN-level boundary is
+what that one product can win, which is usually a subset. A brand selling both
+kids and teen ranges has both in scope; its kids shampoo does not, and leaving
+teen demand in scope charges the product with a gap it structurally cannot
+close. Profile the ASIN's own segment mix rather than inheriting the brand's.
 
 ### Reported Brand Share percentages are accurate
 

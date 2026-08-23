@@ -53,6 +53,18 @@ def run(cfg) -> dict:
     # ---- Load ------------------------------------------------------------
     sqp = load_sqp(cfg)
     scp = load_scp(cfg)
+    # Search Catalog Performance is always exported for the whole brand. On an
+    # ASIN-level run it has to be narrowed to the same product, or revenue, AOV
+    # and coverage silently describe the brand while every other number on the
+    # page describes one ASIN. Coverage is the worst of the three: a brand-wide
+    # denominator under an ASIN-level numerator understates it several-fold.
+    asin_scope = sqp.attrs.get("asin_scope")
+    own_low = "this ASIN's" if asin_scope else "brand"
+    if asin_scope and len(scp) and "ASIN" in scp.columns:
+        scp = scp[scp["ASIN"].astype(str).str.upper() == asin_scope]
+        if not len(scp):
+            print("  [scope] " + asin_scope + " does not appear in Search Catalog "
+                  "Performance. Revenue, AOV and coverage cannot be reported for it.")
     sqp = add_reliability(sqp)
     periods = sorted(sqp["period"].unique())
     latest = periods[-1]
@@ -89,14 +101,14 @@ def run(cfg) -> dict:
     res.update(scope=scope, churn=churn, panels=panels, coverage=coverage, aov=aov,
                _cov_vol=cov_vol, _cov_pur=cov_pur)
 
-    print(f"  CORE panel: {len(core)} queries | {cov_vol:.1%} of volume | {cov_pur:.1%} of brand purchases")
+    print(f"  CORE panel: {len(core)} queries | {cov_vol:.1%} of volume | {cov_pur:.1%} of " + own_low + " purchases")
     if len(churn):
         print(f"  Monthly churn: {churn['churn'].mean():.1%} "
               f"(structural on a {scope.raw_rows.max():.0f}-row cap)")
     else:
         print(f"  Single period: no churn, trend or movement analysis possible")
     if len(coverage):
-        print(f"  SQP covers {coverage['purch_coverage'].iloc[-1]:.1%} of brand search purchases "
+        print(f"  SQP covers {coverage['purch_coverage'].iloc[-1]:.1%} of " + own_low + " search purchases "
               f"(was {coverage['purch_coverage'].iloc[0]:.1%})")
         print(f"  AOV from Search Traffic Sales: {mp.symbol}{aov:,.0f}")
 

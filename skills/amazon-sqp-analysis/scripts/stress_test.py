@@ -79,6 +79,37 @@ def _rewrite(path: str, fn) -> None:
             df.to_csv(fh, index=False)
 
 
+def _asinify(path: str, asin: str) -> None:
+    """
+    Rewrite a copied brand-level export as the ASIN-level view of itself.
+
+    Amazon's ASIN-level SQP is the same 33 columns with the brand side renamed
+    and an extra field in the metadata row. Building the case this way exercises
+    the real load path rather than a mock of it.
+    """
+    d = os.path.join(path, "Search Query Performance")
+    for f in os.listdir(d):
+        fp = os.path.join(d, f)
+        with open(fp, encoding="utf-8-sig") as fh:
+            meta = fh.readline().rstrip()
+        df = pd.read_csv(fp, skiprows=1)
+        df.columns = [c.strip() for c in df.columns]
+        df = df.rename(columns={c: c.replace(": Brand ", ": ASIN ")
+                                for c in df.columns if ": Brand " in c})
+        with open(fp, "w", encoding="utf-8", newline="") as fh:
+            fh.write(f'ASIN or Product=["{asin}"],' + meta + chr(10))
+            df.to_csv(fh, index=False)
+
+
+def _an_asin(path: str) -> str:
+    """Any ASIN the catalogue report actually contains, so the filter finds rows."""
+    d = os.path.join(path, "Search Catalogue Performance")
+    f = sorted(os.listdir(d))[-1]
+    df = pd.read_csv(os.path.join(d, f), skiprows=1)
+    df.columns = [c.strip() for c in df.columns]
+    return str(df["ASIN"].dropna().iloc[0]).upper()
+
+
 BASE_CFG = os.environ.get("SQP_STRESS_CONFIG", "")
 
 
@@ -110,6 +141,16 @@ def build_cases() -> list[tuple[str, BrandConfig, str]]:
     d = _copy(SRC_BRAND, os.path.join(WORK, "two_months"), ALL[-2:])
     cases.append(("2 months of history", _cfg("S_TwoMonths", d),
                   "runs; no trend, no seasonality, states what is missing"))
+
+    d = _copy(SRC_BRAND, os.path.join(WORK, "asin_level"), ALL[-4:])
+    _asinify(d, _an_asin(d))
+    cases.append(("ASIN-level export (ASIN present in catalogue)", _cfg("S_AsinLevel", d),
+                  "runs; names the ASIN, states its scope, revenue is the ASIN's not the brand's"))
+
+    d = _copy(SRC_BRAND, os.path.join(WORK, "asin_not_in_scp"), ALL[-4:])
+    _asinify(d, "B0ZZZZZZZZ")
+    cases.append(("ASIN-level export, ASIN absent from catalogue", _cfg("S_AsinNoSCP", d),
+                  "runs; says revenue and coverage are unavailable, never falls back to brand-wide"))
 
     d = _copy(SRC_BRAND, os.path.join(WORK, "no_scp"), ALL[-3:], include_scp=False)
     cases.append(("No catalog report at all", _cfg("S_NoSCP", d),

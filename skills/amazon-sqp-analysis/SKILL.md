@@ -87,6 +87,34 @@ Watch the console for warnings that change interpretation:
 - `[taxonomy]` - share of orders landing in the `OTHER` fallback; above 15
   percent the category list needs extending, usually because a competitor is
   unlabelled
+- `[scope]` - an ASIN-level run was detected, or the ASIN is missing from
+  Search Catalog Performance
+
+### Step 4b: Running a single ASIN
+
+Seller Central also exports SQP for one ASIN at a time. The engine handles it
+with no code change: point `sqp_folder` at that ASIN's export folder and it
+detects the level from the export's own metadata row.
+
+```json
+{
+  "name": "Acme Kids Shampoo (B0XXXXXXXX)",
+  "data_dir": "../data/Acme",
+  "sqp_folder": "Search Query Performance/ASIN Level/ASIN ID_ B0XXXXXXXX"
+}
+```
+
+Leave `data_dir` on the brand folder. Search Catalog Performance is exported
+brand-wide and the engine filters it to the ASIN itself.
+
+Two things to get right, both covered in `references/report-mechanics.md`:
+
+1. **Re-profile the relevance boundary.** The brand's boundary is what the
+   brand can win; this product's is usually narrower. Inheriting the brand's
+   charges the product with gaps it cannot close.
+2. **Read every share as one product's slice of the market.** A weak share can
+   mean the market is hard to win or that a sister ASIN is winning it. SQP
+   cannot tell them apart; the brand-level run is what does.
 
 ### Step 5: Review before delivering
 

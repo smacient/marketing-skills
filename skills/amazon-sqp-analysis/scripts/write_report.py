@@ -43,9 +43,24 @@ def analyst_report(res: dict) -> str:
     L = []
     A = L.append
 
+    asin = res["sqp"].attrs.get("asin_scope")
+    cap = int(res["sqp"].attrs.get("max_export_rows") or 1000)
+    ours = f"ASIN {asin}" if asin else "the brand"
+    # Table labels follow the level too. A column headed "Brand purchases" in a
+    # single-ASIN report is simply wrong, and the reader has no way to know it.
+    own = "ASIN" if asin else "Brand"
+    own_low = "this ASIN's" if asin else "brand"
+
     A(f"# {cfg.name} - Search Query Performance Analysis")
     A(f"\n**Marketplace:** {mp.code}  |  **Periods:** {len(periods)} "
       f"({periods[0]} to {latest})  |  **Currency:** {mp.currency}\n")
+
+    if asin:
+        A(f"**Scope: one product, ASIN {asin}.** Every share, score and gap below compares "
+          f"*this single ASIN* against the whole market for the same searches, not the brand. "
+          f"A weak share here can mean the market is hard to win, or simply that a sister ASIN "
+          f"is winning it instead. This report cannot tell those apart; the brand-level report "
+          f"is what separates them.")
 
     # --- scope ---
     A("## How to read this\n")
@@ -54,10 +69,10 @@ def analyst_report(res: dict) -> str:
       "units, and the attribution window is short, so these totals will never match Seller "
       "Central sales. That is by design, not an error.\n")
     A("Two properties of this report drive everything below:\n")
-    A("- **Search Query Score ranks by *this brand's* funnel performance, not by market volume.** "
-      "The export is the top 1,000 queries where the brand performs best, not the top 1,000 in "
-      "the category. High-volume queries with no brand presence are structurally invisible.")
-    A("- **Shares are the trendable unit; counts are not.** Brand share is a ratio against the "
+    A(f"- **Search Query Score ranks by *{ours}'s own* funnel performance, not by market volume.** "
+      f"The export is the top {cap:,} queries where {ours} performs best, not the top {cap:,} in "
+      f"the category. High-volume queries with no presence are structurally invisible.")
+    A(f"- **Shares are the trendable unit; counts are not.** {own} share is a ratio against the "
       "same-period market, so any shock hitting all sellers cancels out. Absolute counts carry "
       "the full seasonal signal and mean little on their own.\n")
 
@@ -82,7 +97,7 @@ def analyst_report(res: dict) -> str:
         A("| | Start | Latest | Change |")
         A("|---|---|---|---|")
         A(f"| Market purchases | {f.TP:,.0f} | {l.TP:,.0f} | **{100*(l.TP/f.TP-1):+.0f}%** |")
-        A(f"| Brand purchases | {f.BP:,.0f} | {l.BP:,.0f} | **{100*(l.BP/f.BP-1):+.0f}%** |")
+        A(f"| {own} purchases | {f.BP:,.0f} | {l.BP:,.0f} | **{100*(l.BP/f.BP-1):+.0f}%** |")
         A(f"| Purchase share | {f.PS:.2f}% | {l.PS:.2f}% | {l.PS-f.PS:+.2f}pp |")
         A(f"| Tile Score | {f.R1:.2f} | {l.R1:.2f} | {l.R1-f.R1:+.2f} |")
         A(f"| Page Score | {f.R2:.2f} | {l.R2:.2f} | {l.R2-f.R2:+.2f} |")
@@ -102,7 +117,7 @@ def analyst_report(res: dict) -> str:
         A("Same calendar month year over year, so seasonality is removed by construction. "
           "Only the share effect is management performance; the market effect is the category "
           "rising underneath the brand.\n")
-        A("| Comparison | Market growth | Brand growth | Share move | Market effect | Share effect | Share effect as % of growth |")
+        A(f"| Comparison | Market growth | {own} growth | Share move | Market effect | Share effect | Share effect as % of growth |")
         A("|---|---|---|---|---|---|---|")
         for _, r in yoy.iterrows():
             A(f"| {r.prior} to {r.period} | {100*(r.market_purch_1/r.market_purch_0-1):+.0f}% | "
@@ -147,7 +162,7 @@ def analyst_report(res: dict) -> str:
     if len(tmove) and tmove.significant.any():
         A("\n### Significant theme movement\n")
         A(f"First period against latest, two-proportion test at 95%.\n")
-        A("| Theme | Share start | Share end | Move | Market growth | Brand growth | Purchases at stake | z |")
+        A(f"| Theme | Share start | Share end | Move | Market growth | {own} growth | Purchases at stake | z |")
         A("|---|---|---|---|---|---|---|---|")
         for _, r in tmove[tmove.significant].iterrows():
             A(f"| {r.theme} | {r.PS_start:.2f}% | {r.PS_end:.2f}% | **{r.delta_pp:+.2f}pp** | "
@@ -197,20 +212,20 @@ def analyst_report(res: dict) -> str:
     # --- data quality ---
     A("\n## 6. Data quality and what was not analysable\n")
     sc, ch = res["scope"], res["churn"]
-    A(f"- Every export is capped at **{sc.raw_rows.max():,.0f} rows**, ranked by brand performance. "
+    A(f"- Every export is capped at **{sc.raw_rows.max():,.0f} rows**, ranked by {ours}'s own performance. "
       f"Queries below that cut are invisible, so absence from the report is not absence from "
       f"the market.")
     A(f"- Monthly query churn averages **{ch.churn.mean():.0%}**. On a capped export over a long "
       f"tail this is structural, not an export fault.")
     A(f"- The CORE panel (present in all {len(periods)} months) is **{len(res['panels']['CORE'])} "
-      f"queries**, covering {res['_cov_pur']:.0%} of brand purchases but only "
+      f"queries**, covering {res['_cov_pur']:.0%} of {own_low} purchases but only "
       f"{res['_cov_vol']:.0%} of volume. Trend claims are gated on the purchase coverage, "
       f"because purchases are what the analysis is about.")
     if len(res["coverage"]):
         c = res["coverage"]
-        A(f"- The visible query set explains **{c.purch_coverage.iloc[-1]:.0%}** of brand search "
+        A(f"- The visible query set explains **{c.purch_coverage.iloc[-1]:.0%}** of {own_low} search "
           f"purchases, down from {c.purch_coverage.iloc[0]:.0%}. Business is increasingly "
-          f"coming from queries outside the top 1,000.")
+          f"coming from queries outside the top {cap:,}.")
     if len(res["signals"]):
         A(f"- **No query-level monthly share move cleared the noise floor** "
           f"({len(res['signals'])} persistent movers, 0 significant). This is why every trend "
@@ -252,6 +267,18 @@ def leadership_note(res: dict) -> str:
         f"same moment, which is the part no internal report can tell us. Throughout, the market "
         f"we measure ourselves against is {scope} demand, because that is what we can "
         f"realistically win.")
+
+    # A single-product note that never says it is about a single product invites
+    # the reader to draw brand-wide conclusions from one ASIN's numbers.
+    asin = res["sqp"].attrs.get("asin_scope")
+    if asin:
+        P.append(
+            f"One thing to hold in mind while reading this. It covers a single product, "
+            f"ASIN {asin}, and not the brand as a whole. So every share figure is that one "
+            f"product's slice of the market, which means a low number can mean the market is "
+            f"genuinely hard to win, or simply that another of our own products is the one "
+            f"winning it. This data cannot separate those two, and the brand-level report is "
+            f"where that question gets answered.")
 
     # Scale and direction, only as far as the data supports.
     if len(res["coverage"]):

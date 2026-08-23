@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Stress-test and analysis output. These are generated from real client
+# exports, so they must never reach a public repo.
+outputs/
+*.csv
+*.xlsx

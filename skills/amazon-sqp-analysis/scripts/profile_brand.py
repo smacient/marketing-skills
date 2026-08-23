@@ -13,6 +13,13 @@ substitute for checking: the profiler can see that share collapses above 2x
 market price, but only a person knows whether the brand intends to be premium.
 
 Usage:  python profile_brand.py "<path to brand data folder>" "<Brand Name>"
+                                [<SQP subfolder>]
+
+The third argument profiles a single ASIN instead of the brand, e.g.
+"Search Query Performance/ASIN Level/ASIN ID_ B0XXXXXXXX". Keep the first
+argument on the brand folder either way; the catalogue report is filtered to
+the ASIN automatically. A product's winnable market is usually narrower than
+its brand's, so the boundary has to be profiled per ASIN rather than inherited.
 """
 
 from __future__ import annotations
@@ -48,18 +55,28 @@ def _tokens(q: str) -> list[str]:
     return [w for w in re.findall(r"[a-z]+", q) if len(w) > 2 and w not in STOPWORDS]
 
 
-def profile(data_dir: str, brand_name: str) -> dict:
+def profile(data_dir: str, brand_name: str, sqp_folder: str | None = None) -> dict:
+    kw = {"sqp_folder": sqp_folder} if sqp_folder else {}
     cfg = BrandConfig(name=brand_name, data_dir=data_dir,
-                      brand_patterns=[re.escape(brand_name.split()[0].lower())])
+                      brand_patterns=[re.escape(brand_name.split()[0].lower())], **kw)
     sqp = load_sqp(cfg)
     scp = load_scp(cfg)
+    # Catalogue is always exported brand-wide. On an ASIN profile it has to be
+    # narrowed to the same product or the headline counts describe the brand
+    # while everything below them describes one ASIN.
+    asin = sqp.attrs.get("asin_scope")
+    if asin and len(scp) and "ASIN" in scp.columns:
+        scp = scp[scp["ASIN"].astype(str).str.upper() == asin]
     latest = sorted(sqp["period"].unique())[-1]
     cur = sqp[sqp.period == latest].copy()
     out = {"periods": sorted(sqp["period"].unique()), "latest": latest}
 
     print("=" * 100)
-    print(f"BRAND PROFILE: {brand_name}")
+    print(f"{'ASIN' if asin else 'BRAND'} PROFILE: {brand_name}")
     print("=" * 100)
+    if asin:
+        print(f"  Level: single ASIN {asin}. Every share below is this product's "
+              f"slice of the market, not the brand's.")
     print(f"  Periods: {len(out['periods'])} ({out['periods'][0]} to {latest})")
     print(f"  Search terms per export: {len(cur):,}")
     print(f"  Market orders in latest period: {cur[TOTAL['Purchases']].sum():,.0f}")
@@ -202,4 +219,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print(__doc__)
         sys.exit(1)
-    profile(os.path.abspath(sys.argv[1]), sys.argv[2])
+    profile(os.path.abspath(sys.argv[1]), sys.argv[2],
+            sys.argv[3] if len(sys.argv) > 3 else None)

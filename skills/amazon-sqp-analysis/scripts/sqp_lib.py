@@ -7,7 +7,7 @@ so the same engine runs any brand in any marketplace.
 Verified against real monthly exports from four brands on amazon.in. See
 references/report-mechanics.md for the mechanics this encodes, in particular:
   - Search Query Score ranks by BRAND funnel performance, not market volume
-  - Exports are hard-capped at 1000 rows
+  - Exports are hard-capped: 1000 rows brand-level, 100 rows ASIN-level
   - Shipping-speed columns are MARKET level, not brand level
   - "Clicks: Click Rate %" is clicks / search volume, NOT click-through rate
   - Reported Brand Share % is accurate, but we recompute from counts anyway
@@ -53,6 +53,24 @@ def _period_from_metadata(path: str) -> tuple[int, int] | None:
     if y and m and m.group(1).upper() in MONTHS:
         return int(y.group(1)), MONTHS[m.group(1).upper()]
     return None
+
+
+def _asin_from_metadata(path: str) -> str | None:
+    """
+    Read the ASIN from an ASIN-level export's metadata row, which looks like
+    `ASIN or Product=["B0XXXXXXXX"],Reporting Range=["Monthly"],...`.
+
+    Brand-level exports have no such field. Its presence is what tells the
+    analysis that "ours" means one product rather than the whole brand, which
+    changes what every share figure in the report means.
+    """
+    try:
+        with open(path, encoding="utf-8-sig") as fh:
+            head = fh.readline()
+    except OSError:
+        return None
+    m = re.search(r'ASIN or Product\s*=\s*\["?([A-Z0-9]{10})"?\]', head, re.I)
+    return m.group(1).upper() if m else None
 
 
 def _period_from_reporting_date(path: str) -> tuple[int, int] | None:
@@ -313,6 +331,17 @@ def _read_report(path: str) -> pd.DataFrame:
     """
     df = pd.read_csv(path, skiprows=1)
     df.columns = [c.strip() for c in df.columns]
+    # ASIN-level SQP carries the same 33 columns as the brand-level report but
+    # names the "ours" side ASIN rather than Brand: `Clicks: ASIN Count` for
+    # `Clicks: Brand Count`, and so on. Normalising the names here is what
+    # makes every downstream calculation level-agnostic. Only the labelling in
+    # the report differs, and that is driven by the ASIN in the metadata row.
+    # Search Catalog Performance's plain `ASIN` and `ASIN Title` columns do not
+    # match the `: ASIN ` pattern and are left alone.
+    rename = {c: c.replace(": ASIN ", ": Brand ") for c in df.columns
+              if ": ASIN " in c and c.replace(": ASIN ", ": Brand ") not in df.columns}
+    if rename:
+        df = df.rename(columns=rename)
     for c in df.columns:
         if any(h in c for h in NUMERIC_HINTS) and df[c].dtype == object:
             df[c] = pd.to_numeric(
@@ -338,8 +367,11 @@ def load_sqp(cfg: BrandConfig, folder: str | None = None) -> pd.DataFrame:
     paths = sorted(glob.glob(os.path.join(cfg.data_dir, folder, "*.csv")), key=parse_period)
     if not paths:
         raise FileNotFoundError(f"No SQP CSVs under {os.path.join(cfg.data_dir, folder)}")
-    frames, empty = [], []
+    frames, empty, scopes = [], [], set()
     for p in paths:
+        scope = _asin_from_metadata(p)
+        if scope:
+            scopes.add(scope)
         y, m = parse_period(p)
         df = _read_report(p)
         if len(df) == 0:
@@ -373,6 +405,17 @@ def load_sqp(cfg: BrandConfig, folder: str | None = None) -> pd.DataFrame:
     enriched = _enrich_sqp(out, cfg)
     enriched.attrs["missing_columns"] = missing
     enriched.attrs["empty_exports"] = empty
+    # One ASIN across every file means an ASIN-level run. A mix means the folder
+    # holds more than one product, which the analysis is not set up to separate,
+    # so it is treated as brand-level and said so rather than guessed at.
+    enriched.attrs["asin_scope"] = sorted(scopes)[0] if len(scopes) == 1 else None
+    if len(scopes) > 1:
+        print(f"  [scope] {len(scopes)} different ASINs across these exports. "
+              f"Analysing them as one pooled set.")
+    # The row ceiling is read from the data rather than hardcoded: brand-level
+    # exports cap at 1,000 rows and ASIN-level ones at 100, and stating the
+    # wrong number makes the coverage discussion wrong.
+    enriched.attrs["max_export_rows"] = int(out["raw_rows_in_export"].max())
     return enriched
 
 
@@ -691,7 +734,7 @@ def definitions_table() -> pd.DataFrame:
         ("", "", "", ""),
         ("EVERYTHING ELSE", "", "", ""),
         ("Search Volume", "", "How many times this was searched in the month", ""),
-        ("Amazon Rank (1=best)", "", "Amazon's rank of this term BY OUR OWN PERFORMANCE, not by market size", "Only top 1,000 are exported"),
+        ("Amazon Rank (1=best)", "", "Amazon's rank of this term BY OUR OWN PERFORMANCE, not by market size", "Only the best-performing rows are exported: 1,000 brand-level, 100 ASIN-level"),
         ("Our Price vs Market", "Our median / market median", "1.00 = same price. 2.00 = we cost twice as much", ""),
         ("Results Page Crowding", "Market Impressions / Search Volume", "How many products compete per search. If this rises, EVERYONE's impression share falls mechanically", "Check before calling a share drop a problem"),
         ("Purchases per Search", "Market Purchases / Search Volume", "How commercial the search is. Low = browsing, not buying", ""),

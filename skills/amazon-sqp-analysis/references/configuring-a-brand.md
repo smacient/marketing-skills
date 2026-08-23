@@ -12,6 +12,7 @@ plausible analysis of the wrong market.
 4. Brand patterns
 5. Product categories
 6. Worked examples from four real brands
+7. Configuring a single ASIN
 
 ---
 
@@ -35,6 +36,10 @@ one per brand type, and choosing wrong changes the entire answer.
 
 Run the profiler and read section 3 of its output. It tests two dimensions and
 reports how far share varies along each.
+
+The boundary belongs to whatever is being analysed. A brand's boundary is what
+the brand can win; a single ASIN's is what that one product can win, which is
+usually a subset. See section 7.
 
 ### `price_tier`
 
@@ -113,7 +118,7 @@ Must cover more than the registered spelling:
 Section 1 of the profiler finds these: any token whose purchase share is near
 total is the brand under some spelling, however little it resembles the name.
 
-Guard against over-matching. `\botto\b` must not match "cotton" or "lotto".
+Guard against over-matching. A short brand name is the dangerous case: a pattern like `\bnova\b` must not match "innovate" or "casanova".
 
 ---
 
@@ -144,3 +149,48 @@ otherwise dominate any ranking.
 | Premium ayurvedic adult care | `price_tier`, 3.0 | 2.7x the market median; share collapses with price, not category |
 | Premium menswear | `price_tier`, 2.0 | ~2x market; apparel is more price-sensitive so the threshold is tighter |
 | Traditional menswear specialist | `category` (product type) | Priced at parity, so price is not the constraint; the constraint is what they make |
+
+---
+
+## 7. Configuring a single ASIN
+
+Seller Central exports SQP for one ASIN at a time as well as for the brand. The
+config is the brand's with three changes:
+
+```json
+{
+  "name": "Acme Kids Shampoo (B0XXXXXXXX)",
+  "data_dir": "../data/Acme",
+  "sqp_folder": "Search Query Performance/ASIN Level/ASIN ID_ B0XXXXXXXX",
+  "relevance": {"type": "category", "in_scope": ["YOUNGER_BAND"]}
+}
+```
+
+- **`name`** becomes the product plus its ASIN. That name is what the report
+  calls itself throughout, so a bare brand name here produces a document that
+  reads as if it covers the whole brand.
+- **`sqp_folder`** points at the ASIN's export folder. Leave `data_dir` on the
+  brand folder: Search Catalog Performance is only ever exported brand-wide and
+  the engine filters it to the ASIN itself.
+- **`relevance.in_scope`** is re-profiled, never inherited.
+
+The third is the one that matters; the other two are plumbing. Profile the ASIN
+with the third argument to `profile_brand.py`:
+
+```bash
+python scripts/profile_brand.py "<brand folder>" "<Brand Name>"   "Search Query Performance/ASIN Level/ASIN ID_ B0XXXXXXXX"
+```
+
+**Worked example.** A kids personal care brand competes in two age bands, 4-10
+and 11-16, and both are in scope in its brand config. One of its shampoos, sold
+for the younger band, takes 82% of its purchases from 4-10 terms and 2% from
+11-16 terms, so the older band is out of scope for that product. Inheriting the
+brand's boundary would have charged a kids shampoo with closing a teen gap it
+cannot close, and the resulting action list would have been led by an
+opportunity that does not exist.
+
+One reading caveat carries into every ASIN report: a share figure is one
+product's slice of the whole market. A weak number can mean the market is hard
+to win, or that a sister ASIN is winning it. SQP cannot separate those, so the
+brand-level run is what answers it. The mechanics are in
+`report-mechanics.md`.
