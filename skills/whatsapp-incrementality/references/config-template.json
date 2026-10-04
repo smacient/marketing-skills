@@ -1,0 +1,41 @@
+{
+  "messages": {
+    "files": ["exports/messages/*.csv"],
+    "dayfirst": true,
+    "campaign_from_filename": false,
+    "columns": {
+      "phone": "Recipient",
+      "campaign": "Campaign",
+      "sent_at": "Sent At",
+      "delivered_at": "Delivered At",
+      "failure_reason": "Fail Cause",
+      "attributed_order_id": "Order Id",
+      "attributed_order_value": "Order Value"
+    }
+  },
+  "orders": {
+    "files": ["exports/orders_export.csv"],
+    "dayfirst": false,
+    "columns": {
+      "order_id": "Name",
+      "created_at": "Created at",
+      "phones": ["Phone", "Shipping Phone", "Billing Phone"],
+      "order_value": "Total"
+    },
+    "exclude_if": [
+      {"column": "Cancelled at", "not_empty": true},
+      {"column": "Financial Status", "in": ["refunded", "voided"]}
+    ]
+  },
+  "phone_digits": 10,
+  "windows_days": [3, 7, 14],
+  "campaign_groups": {"Festive sale": ["Festive launch", "Festive reminder", "Festive last day"]},
+  "group_windows": {"Festive sale": 13},
+  "episode_gap_days": 14,
+  "min_control": 20,
+  "cost_per_message": 1.02,
+  "margin_per_order": 300,
+  "capped_patterns": ["131049", "healthy ecosystem"],
+  "holdout_patterns": ["130472", "part of an experiment"],
+  "output_dir": "incrementality_output"
+}

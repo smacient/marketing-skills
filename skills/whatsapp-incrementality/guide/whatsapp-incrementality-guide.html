@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WhatsApp Incrementality Guide</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <style>
+  @page { size: A4; margin: 16mm 18mm; }
+  body { font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11.5pt; line-height: 1.55; color: #222; max-width: none; margin: 0; padding: 0; }
+  h1 { color: #1F3864; font-size: 21pt; line-height: 1.25; margin: 0 0 6px 0; }
+  h2 { color: #1F3864; font-size: 14.5pt; margin: 20px 0 8px 0; border-bottom: 1px solid #c9d3e6; padding-bottom: 4px; page-break-after: avoid; }
+  h3 { color: #1F3864; font-size: 12.5pt; margin: 14px 0 6px 0; page-break-after: avoid; }
+  p, li { margin: 6px 0; }
+  ul, ol { margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 12px 0; font-size: 10.5pt; }
+  tr { page-break-inside: avoid; } thead { display: table-header-group; }
+  th, td { border: 1px solid #9aa7bf; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #e8edf6; color: #1F3864; }
+  blockquote { margin: 8px 0; padding: 8px 14px; background: #f3f6fb; border-left: 3px solid #1F3864; }
+  code { font-family: Consolas, monospace; background: #f1f1f1; padding: 0 3px; }
+  p:has(+ table), p:has(+ ul), p:has(+ ol) { break-after: avoid; page-break-after: avoid; }
+  li { break-inside: avoid; }
+  </style>
+</head>
+<body>
+<h1 id="is-whatsapp-really-bringing-you-sales">Is WhatsApp really
+bringing you sales?</h1>
+<p><em>A simple guide to finding out, no data team needed</em></p>
+<h2 id="the-problem">The problem</h2>
+<p>Your WhatsApp tool tells you how many orders came from your messages.
+But it counts anyone who ordered after reading a message, including
+people who were going to buy anyway.</p>
+<p>What you want to know is how many of those orders happened only
+because you sent the message.</p>
+<p>When we checked this for one D2C brand:</p>
+<ul>
+<li>The WhatsApp tool credited a sale campaign with 453 orders. About
+256 happened because of the messages.</li>
+<li>Messages to people who had never bought brought in zero extra
+orders.</li>
+<li>A "time to reorder" reminder got people to order a few days sooner,
+but no extra orders overall.</li>
+<li>Loyal customers who hadn't ordered in 4 to 8 months responded the
+most. Recent buyers ordered the same with or without a message.</li>
+</ul>
+<h2 id="the-simple-idea">The simple idea</h2>
+<p>Compare two groups of similar customers:</p>
+<ul>
+<li><strong>Group A</strong> got your message</li>
+<li><strong>Group B</strong> did not</li>
+</ul>
+<p>If Group A orders more, the difference is what your message
+earned.</p>
+<p>You may already have a Group B. WhatsApp limits how many brand
+messages a person can receive in a day, so on every campaign some of
+your customers never get your message. In your message report, these
+show up as "failed", with a reason like <em>"not delivered to maintain
+healthy ecosystem engagement"</em>. Those people are your Group B.</p>
+<p>If your report doesn't show the failure reason, skip to
+<strong>Option 3</strong>.</p>
+<h2 id="option-1-let-claude-do-it-easiest-about-an-hour">Option 1: Let
+Claude do it (easiest, about an hour)</h2>
+<ol type="1">
+<li><strong>Download two reports.</strong>
+<ul>
+<li>From your WhatsApp tool: the message report for the campaign or
+journey you want to check.</li>
+<li>From Shopify (or your store): an orders export for the same period
+plus two weeks.</li>
+</ul></li>
+<li><strong>Open Claude</strong> with the free
+<code>whatsapp-incrementality</code> skill installed.</li>
+<li><strong>Tell Claude</strong> where the two files are and say:
+<em>"Check if this WhatsApp campaign actually brought in extra
+sales."</em></li>
+<li><strong>Answer a few questions.</strong> Claude will ask which
+campaign is which and what a message costs you (about Rs 1 in
+India).</li>
+<li><strong>Read the verdict.</strong> For each campaign you get: orders
+the tool claimed, orders the messages caused, and <strong>Keep, Fix or
+Stop</strong>.</li>
+</ol>
+<p>Everything runs on your own computer. Your customer data stays with
+you.</p>
+<h2 id="option-2-do-it-in-google-sheets-about-half-a-day">Option 2: Do
+it in Google Sheets (about half a day)</h2>
+<p>Take one sale campaign to start.</p>
+<p><strong>Step 1. Put both reports in one sheet</strong>, on two tabs:
+<em>Messages</em> and <em>Orders</em>.</p>
+<p><strong>Step 2. Make phone numbers match.</strong> WhatsApp might
+show 919876543210 while Shopify shows +91 98765 43210. Add a column on
+both tabs that keeps only the last 10 digits.</p>
+<p><strong>Step 3. Sort people into two groups</strong> on the Messages
+tab:</p>
+<ul>
+<li><strong>Got it</strong>: the message was delivered.</li>
+<li><strong>Didn't get it</strong>: the message failed with the
+<em>"healthy ecosystem"</em> reason.</li>
+<li>Ignore every other kind of failure, such as wrong numbers or people
+not on WhatsApp.</li>
+</ul>
+<p><strong>Step 4. Mark who ordered.</strong> For each person, check the
+Orders tab: did they place an order between the day the message went out
+and two days after the sale ended? Mark Yes or No.</p>
+<p><strong>Step 5. Compare the two groups.</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>People</th>
+<th>Ordered</th>
+<th>% who ordered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Got it</td>
+<td>10,000</td>
+<td>300</td>
+<td>3.0%</td>
+</tr>
+<tr>
+<td>Didn't get it</td>
+<td>2,000</td>
+<td>40</td>
+<td>2.0%</td>
+</tr>
+</tbody>
+</table>
+<p>The message added 1 percentage point. So out of the 10,000 who got
+it, about <strong>100 orders</strong> came from the message. The other
+200 would have happened anyway.</p>
+<p><strong>Step 6. Repeat for each type of customer.</strong> Do steps 4
+and 5 separately for:</p>
+<ul>
+<li>people who bought in the last 4 months</li>
+<li>people who last bought 4 to 12 months ago</li>
+<li>people who last bought over a year ago</li>
+<li>people who have never bought</li>
+</ul>
+<p>You will usually find one or two groups that respond strongly, and
+others that don't move at all.</p>
+<p><strong>Step 7. Decide.</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>What you see</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clear extra orders, and a message costs less than an order earns
+you</td>
+<td><strong>Keep</strong> sending to this group</td>
+</tr>
+<tr>
+<td>Small difference, hard to tell</td>
+<td><strong>Test</strong> again with Option 3</td>
+</tr>
+<tr>
+<td>No difference</td>
+<td><strong>Stop</strong> messaging this group, or change the offer</td>
+</tr>
+<tr>
+<td>Extra orders in the first 2-3 days, gone by 2 weeks</td>
+<td><strong>Retime it</strong>: people ordered sooner, not more</td>
+</tr>
+</tbody>
+</table>
+<h2
+id="option-3-start-fresh-with-your-next-campaign-simplest-of-all">Option
+3: Start fresh with your next campaign (simplest of all)</h2>
+<p>Before your next broadcast or journey goes out:</p>
+<ol type="1">
+<li>Take your send list.</li>
+<li>Randomly set aside <strong>1 in every 10 people</strong>. Don't
+message them.</li>
+<li>After the campaign, compare how many people ordered in each group,
+as in Step 5.</li>
+</ol>
+<p>It's the cleanest test you can run. Do it on every campaign and
+you'll know what WhatsApp is earning.</p>
+<h2 id="five-mistakes-to-avoid">Five mistakes to avoid</h2>
+<ol type="1">
+<li><strong>Trusting the dashboard number.</strong> "Orders after a
+message" are not "orders because of a message".</li>
+<li><strong>Comparing your message list with everyone else.</strong>
+Your list is your best customers. Of course they buy more.</li>
+<li><strong>Counting order confirmation messages as sales.</strong>
+Those people had already bought.</li>
+<li><strong>Checking only the first 3 days.</strong> A reminder that
+makes people order sooner looks great on day 3 and does nothing by day
+14.</li>
+<li><strong>Sending your biggest blast on the busiest day.</strong> On
+crowded sale days, WhatsApp blocks more messages. In our case 43% were
+blocked on a sale's last day, against 14% on its first.</li>
+</ol>
+<p><em>Want the shortcut? Comment on the post and I'll send you the free
+Claude skill that does all of this for you.</em></p>
+</body>
+</html>
