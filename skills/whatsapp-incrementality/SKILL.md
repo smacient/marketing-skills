@@ -47,6 +47,13 @@ Use the same key file for every export that needs to join. The script prints onl
 and row counts. Check its output: every phone column must be listed as hashed. Continue with
 the `safe/*_safe.csv` files. The analysis accepts hashed phones as-is.
 
+**Never preview the raw exports to work out which column is which.** Column mapping (step 1)
+runs only on the `*_safe.csv` files. The script finds phone columns itself, from header names and
+from values that look like phone numbers (checked locally, never printed). If it reports
+"NONE FOUND", ask the user for the phone column's header name (a header is not personal data)
+and rerun with `--phone-cols "<header>"`. Use `--drop "<header>"` for any other column the user
+considers personal, and `--keep "<header>"` only if the user confirms it holds no personal data.
+
 ### 1. Profile and map columns
 
 ```bash
