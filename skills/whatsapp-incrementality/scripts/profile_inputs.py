@@ -52,12 +52,23 @@ def pick(cols, patterns, used):
     return None
 
 
+RAW_PHONE = re.compile(r"\+?\d[\d\s-]{8,}\d")
+
+
 def describe(df, name):
+    """Print columns with samples. Anything that looks like a raw phone number is masked."""
     print(f"\n=== {name}: {len(df):,} rows, {len(df.columns)} columns")
+    raw_cols = []
     for c in df.columns:
         vals = df[c].replace("", pd.NA).dropna()
-        sample = " | ".join(vals.astype(str).head(3).str.slice(0, 40))
+        head = vals.astype(str).head(20)
+        if re.search(r"phone|mobile|recipient|number", c, re.I) and len(head) and head.str.fullmatch(RAW_PHONE).mean() > 0.5:
+            raw_cols.append(c)
+        sample = " | ".join(head.head(3).map(lambda v: RAW_PHONE.sub("[number]", v)).str.slice(0, 40))
         print(f"  {c[:38]:38s} filled {len(vals) / max(len(df), 1):5.0%}  e.g. {sample}")
+    if raw_cols:
+        print(f"  NOTE: {', '.join(raw_cols)} hold raw phone numbers. For full privacy, run pseudonymize.py"
+              " first and profile the *_safe.csv files instead.")
 
 
 def main():

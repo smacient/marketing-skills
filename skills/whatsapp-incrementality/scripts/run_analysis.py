@@ -62,9 +62,16 @@ def parse_dt(s: pd.Series, dayfirst: bool, fmt: str | None) -> pd.Series:
     return out
 
 
+_HASHED = re.compile(r"^[0-9a-f]{24}$")
+
+
 def norm_phone(s: pd.Series, digits: int) -> pd.Series:
-    d = s.fillna("").astype(str).str.replace(r"\.0$", "", regex=True).str.replace(r"\D", "", regex=True)
-    return d.where(d.str.len() >= digits).str[-digits:]
+    """Last N digits of a raw phone, or the code itself if pseudonymize.py already hashed it."""
+    raw = s.fillna("").astype(str).str.strip()
+    hashed = raw.str.match(_HASHED)
+    d = raw.str.replace(r"\.0$", "", regex=True).str.replace(r"\D", "", regex=True)
+    d = d.where(d.str.len() >= digits).str[-digits:]
+    return raw.where(hashed, d).where(hashed | d.notna())
 
 
 def load_messages(cfg, base):

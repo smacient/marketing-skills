@@ -9,7 +9,9 @@ Most WhatsApp platforms and UTMs count any order placed within a few days of a m
 
 It compares their store orders with the orders of people who did receive the message, within the same recency and order-history segments.
 
-No API or MCP connector required. Everything runs locally on two CSV exports, and no phone numbers are sent anywhere.
+No API or MCP connector required. Everything runs locally on two CSV exports.
+
+**Privacy:** one command, run before Claude sees anything, swaps every phone number for a code and removes names, emails and addresses. The codes come from a secret key that stays on your machine, so they cannot be turned back into numbers. The same number gets the same code in both files, so the analysis works unchanged. Claude only ever sees the coded files.
 
 A plain-language version of the method, for teams that want to do it by hand, is in [`guide/`](guide/).
 
@@ -53,7 +55,8 @@ Then point Claude at the two exports. It profiles them, proposes a column mappin
 Manual invocation:
 
 ```bash
-python scripts/profile_inputs.py --messages "exports/messages/*.csv" --orders "exports/orders.csv" --out work
+python scripts/pseudonymize.py exports/messages.csv exports/orders.csv --out safe --key-file pseudonym.key
+python scripts/profile_inputs.py --messages "safe/messages_safe.csv" --orders "safe/orders_safe.csv" --out work
 python scripts/run_analysis.py work/config.json
 python scripts/holdout_split.py next_send_list.csv --phone-col "Phone" --pct 10 --salt "festive-2026"
 ```
@@ -72,6 +75,7 @@ whatsapp-incrementality/
 ├── SKILL.md
 ├── requirements.txt
 ├── scripts/
+│   ├── pseudonymize.py     privacy step: phone numbers to keyed codes, personal columns dropped
 │   ├── profile_inputs.py   column discovery + draft config
 │   ├── run_analysis.py     the analysis, workbook and report
 │   ├── holdout_split.py    reproducible send / holdout split for future campaigns

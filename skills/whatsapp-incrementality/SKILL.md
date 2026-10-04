@@ -24,10 +24,28 @@ Two exports from the user:
 ## Privacy rules (non-negotiable)
 
 - Work only on local files. Never upload exports anywhere.
+- **Pseudonymize first.** Before profiling or analysing, the exports go through
+  `scripts/pseudonymize.py`. It replaces every phone number with a keyed code (HMAC-SHA256 with
+  a secret key file that stays on the user's machine), drops name, email and address columns,
+  and masks long numbers inside free text. The join still works because the same number gets
+  the same code in both files.
+- Best: the user runs that one command themselves and gives you only the `*_safe.csv` files.
+  If you run it for them, do not open, read or print the raw files; work only on the outputs.
+- Never ask for, read or share the key file.
 - Never print, quote or paste phone numbers into the conversation or any report. Report
   aggregates only.
 
 ## Workflow
+
+### 0. Pseudonymize (privacy step)
+
+```bash
+python scripts/pseudonymize.py <message export(s)> <orders export(s)> --out safe --key-file pseudonym.key
+```
+
+Use the same key file for every export that needs to join. The script prints only column names
+and row counts. Check its output: every phone column must be listed as hashed. Continue with
+the `safe/*_safe.csv` files. The analysis accepts hashed phones as-is.
 
 ### 1. Profile and map columns
 

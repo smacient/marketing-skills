@@ -33,12 +33,13 @@ If your report doesn't show the failure reason, skip to **Option 3**.
 1. **Download two reports.**
    - From your WhatsApp tool: the message report for the campaign or journey you want to check.
    - From Shopify (or your store): an orders export for the same period plus two weeks.
-2. **Open Claude** with the free `whatsapp-incrementality` skill installed.
-3. **Tell Claude** where the two files are and say: *"Check if this WhatsApp campaign actually brought in extra sales."*
-4. **Answer a few questions.** Claude will ask which campaign is which and what a message costs you (about Rs 1 in India).
-5. **Read the verdict.** For each campaign you get: orders the tool claimed, orders the messages caused, and **Keep, Fix or Stop**.
+2. **Run the privacy step.** Ask Claude for the privacy command, then copy it into your computer's terminal and run it yourself. It swaps every phone number for a code and removes names, emails and addresses, so Claude only ever sees the coded copies.
+3. **Open Claude** with the free `whatsapp-incrementality` skill installed.
+4. **Tell Claude** where the two coded files are and say: *"Check if this WhatsApp campaign actually brought in extra sales."*
+5. **Answer a few questions.** Claude will ask which campaign is which and what a message costs you (about Rs 1 in India).
+6. **Read the verdict.** For each campaign you get: orders the tool claimed, orders the messages caused, and **Keep, Fix or Stop**.
 
-Everything runs on your own computer. Your customer data stays with you.
+Everything runs on your own computer, and Claude never sees a real phone number.
 
 ## Option 2: Do it in Google Sheets (about half a day)
 
